@@ -75,14 +75,11 @@ namespace mauipong
 			return null;
 		}
 
-		r2vect vbef;
-		r2vect vaft;
-		private void bounce(r2vect player, r2vect colpoint) //r2vect ballv)
+
+		private void bounce(r2vect playr, r2vect colpoint) //r2vect ballv)
 		{
-			vbef = new(ballv.x, ballv.y);
-			r2vect normal = (colpoint - player).normalise();
+			r2vect normal = (colpoint - playr).normalise();
 			ballv = (ballv - 2 * ballv.innerprod(normal) * normal);
-			vaft = new(ballv.x, ballv.y);
 		}
 
 		r2vect player = new(1000, 360);
@@ -104,17 +101,15 @@ namespace mauipong
 			ball = new(640, 360);
 			var RNG = new Random();
 			double ang = 0;
-			/*do
+			do
 			{
 				ang = RNG.Next(0, 360);
 			}
 			while (!((ang > 60 && ang < 120) || (ang > 240 && ang < 300)));
-			ballv = new(Math.Cos(ang), Math.Sin(ang));*/
-			ballv = new(1, 0);
+			ballv = new(Math.Cos(ang), Math.Sin(ang));
 			ballv = 15 * ballv;
 		}
 
-		r2vect col;
 		private void mainupdate(object? sender, EventArgs e)
 		{
 			double compvel = 0;
@@ -143,6 +138,7 @@ namespace mauipong
 			}
 
 
+
 			int nballx = (int)(ball.x + ballv.x);
 			int nbally = (int)(ball.y + ballv.y);
 			if (nballx < 0 && (nbally > 240 && nbally < 480))
@@ -157,7 +153,7 @@ namespace mauipong
 				skglControl1.Invalidate();
 				return;
 			}
-			col = checkcolision(ball, ballv, player, null, 45);
+			r2vect col = checkcolision(ball, ballv, player, null, 45);
 			if (col != null)
 			{
 				bounce(player, col);//, ballv);
@@ -165,6 +161,15 @@ namespace mauipong
 				skglControl1.Invalidate();
 				return;
 			}
+			r2vect cole = checkcolision(ball, ballv, enemy, null, 45);
+			if (cole != null)
+			{
+				bounce(enemy, cole);//, ballv);
+				ball = ball + 2 * ballv; //not really...
+				skglControl1.Invalidate();
+				return;
+			}
+
 			if (nballx < 0 && (nbally < 240 || nbally > 480))
 			{
 				ballv.x = -ballv.x;
@@ -183,11 +188,8 @@ namespace mauipong
 				skglControl1.Invalidate();
 				return;
 			}
-			else
-			{
-				ball = ball + ballv;
-			}
 
+			ball = ball + ballv;
 			skglControl1.Invalidate();
 		}
 
@@ -198,11 +200,6 @@ namespace mauipong
 			maintimer.Enabled = true;
 		}
 
-		r2vect coll = new(0, 0);
-		r2vect playl = new(0, 0);
-		r2vect balll = new(0, 0);
-		r2vect bvp = new(0, 0);
-		r2vect bva = new(0, 0);
 		private void skglControl1_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs e)
 		{
 			float scale = skglControl1.Height / 720f;
@@ -212,6 +209,18 @@ namespace mauipong
 			canvas.FillRectangle(0, 0, Width, Height);
 
 			//draw field
+			canvas.StrokeColor = Colors.White;
+			canvas.StrokeSize = 30;
+			canvas.DrawRectangle(0, 0, 1280*scale, 720*scale);
+			canvas.StrokeColor = Colors.Black;
+			canvas.StrokeSize = 15;
+			canvas.DrawLine((0 + 7) * scale, 240 * scale, (0 + 7) * scale, 480 * scale);
+			canvas.DrawLine((1280 - 7) * scale, 240 * scale, (1280 - 7) * scale, 480 * scale);
+			canvas.StrokeColor = Colors.White;
+			canvas.StrokeDashPattern = new float[] { 2 * scale, 2 * scale };
+			canvas.DrawLine(640 * scale, 0 * scale, 640 * scale, 720 * scale);
+			canvas.StrokeDashPattern = null;
+
 
 			canvas.FillColor = Colors.White;
 			canvas.FillCircle((int)(ball.x * scale), (int)(ball.y * scale), 15 * scale);
@@ -219,27 +228,6 @@ namespace mauipong
 			canvas.FillCircle((int)(player.x * scale), (int)(player.y * scale), 30 * scale);
 			canvas.FillColor = Colors.Blue;
 			canvas.FillCircle((int)(enemy.x * scale), (int)(enemy.y * scale), 30 * scale);
-
-			if (col != null)
-			{
-				coll = new(col.x, col.y);
-				playl = new(player.x, player.y);
-				balll = new(ball.x, ball.y);
-				bvp = col - vbef;
-				bva = col + vaft;
-			}
-
-			canvas.FillColor = Colors.Orange;
-			canvas.FillCircle((int)(playl.x * scale), (int)(playl.y * scale), 3 * scale);
-			canvas.FillColor = Colors.OrangeRed;
-			canvas.FillCircle((int)(balll.x * scale), (int)(balll.y * scale), 3 * scale);
-			canvas.StrokeColor = Colors.Blue;
-			canvas.StrokeSize = 3;
-			canvas.DrawLine((float)bvp.x * scale, (float)bvp.y * scale, (float)coll.x * scale, (float)coll.y * scale);
-			canvas.StrokeColor = Colors.Cyan;
-			canvas.DrawLine((float)coll.x * scale, (float)coll.y * scale, (float)bva.x * scale, (float)bva.y * scale);
-			canvas.FillColor = Colors.Yellow;
-			canvas.FillCircle((int)(coll.x * scale), (int)(coll.y * scale), 3 * scale);
 		}
 
 		private void GameWindow_MouseDown(object sender, MouseEventArgs e)
@@ -265,6 +253,11 @@ namespace mauipong
 			if (e.KeyCode == Keys.R)
 			{
 				ballshoot();
+			}
+			if (e.KeyCode == Keys.G)
+			{
+				ball = new(640, 360);
+				ballv = new(0, 0);
 			}
 			if (!wpress && e.KeyCode == Keys.W)
 			{
