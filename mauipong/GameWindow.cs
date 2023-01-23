@@ -57,20 +57,17 @@ namespace mauipong
 			if (pointdist(player, ballv, ball) < rsum)
 			{
 				double d = pointdist(player, ballv, ball);
-				r2vect foot = d * (ballv.orthocomp().normalise()) + player;
+				r2vect foot = -d * (ballv.orthocomp().normalise()) + player;
 				r2vect travel = ball - foot;
 				if (travel.l2norm() > ballv.l2norm()) return null;
-				return (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2))) * (-1 * ballv.normalise()) + foot;
+				return (Math.Sqrt(Math.Pow(rsum, 2) + Math.Pow(d, 2))) * (-1 * ballv.normalise()) + foot;
 			}
 			return null;
 		}
 		private void bounce(r2vect player, r2vect colpoint, r2vect ballv)
 		{
-			r2vect normal = (player - colpoint).normalise();
-			//double d = ballv.innerprod(normal);
-			//ballv.x = ballv.x + 2 * d * normal.x;
-			//ballv.y = ballv.y + 2 * d * normal.y;
-			ballv = ballv + 2 * ballv.innerprod(normal) * normal;
+			r2vect normal = (colpoint - player).normalise();
+			this.ballv = (ballv - 2 * ballv.innerprod(normal) * normal);
 		}
 
 		r2vect player = new(1000, 360);
@@ -91,36 +88,41 @@ namespace mauipong
 			ball = new(640, 360);
 			var RNG = new Random();
 			double ang = 0;
-			do
+			/*do
 			{
 				ang = RNG.Next(0, 360);
 			}
 			while (!((ang > 60 && ang < 120) || (ang > 240 && ang < 300)));
-			ballv = new(Math.Cos(ang), Math.Sin(ang));
+			ballv = new(Math.Cos(ang), Math.Sin(ang));*/
+			ballv = new(1, 0);
 			ballv = 15 * ballv;
 		}
 
 		private void mainupdate(object? sender, EventArgs e)
 		{
+			double compvel = 0;
+			int playervel = shftpress ? 7 : 15;
+			compvel = playervel;
+			if ((wpress || spress) && (apress || dpress)) compvel = playervel / Math.Sqrt(2);
 			if (wpress)
 			{
 				if (player.y - 10 - 30 > 0)
-					player.y -= 15;
+					player.y -= compvel;
 			}
 			if (apress)
 			{
 				if (player.x - 10 - 30 > (1280 / 2))
-					player.x -= 15;
+					player.x -= compvel;
 			}
 			if (spress)
 			{
 				if (player.y + 10 + 30 < 720)
-					player.y += 15;
+					player.y += compvel;
 			}
 			if (dpress)
 			{
 				if (player.x + 10 + 30 < 1280)
-					player.x += 15;
+					player.x += compvel;
 			}
 
 
@@ -129,31 +131,38 @@ namespace mauipong
 			if (nballx < 0 && (nbally > 240 && nbally < 480))
 			{
 				ballshoot();
+				skglControl1.Invalidate();
 				return;
 			}
 			if (nballx > 1280 && (nbally > 240 && nbally < 480))
 			{
 				ballshoot();
+				skglControl1.Invalidate();
 				return;
 			}
 			r2vect col = checkcolision(ball, ballv, player, null, 45);
 			if (col != null)
 			{
 				bounce(player, col, ballv);
+				skglControl1.Invalidate();
+				return;
 			}
 			if (nballx < 0 && (nbally < 240 || nbally > 480))
 			{
 				ballv.x = -ballv.x;
+				skglControl1.Invalidate();
 				return;
 			}
 			if (nballx > 1280 && (nbally < 240 || nbally > 480))
 			{
 				ballv.x = -ballv.x;
+				skglControl1.Invalidate();
 				return;
 			}
 			if (nbally < 0 || nbally > 720)
 			{
 				ballv.y = -ballv.y;
+				skglControl1.Invalidate();
 				return;
 			}
 			else
