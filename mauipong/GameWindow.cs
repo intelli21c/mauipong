@@ -284,8 +284,6 @@ namespace mauipong
 			canvas.FillCircle((int)(ball.x * scale), (int)(ball.y * scale), 15 * scale);
 			canvas.FillColor = Colors.Red;
 			canvas.FillCircle((int)(player.x * scale), (int)(player.y * scale), 30 * scale);
-			canvas.FillColor = Colors.Blue;
-			canvas.FillCircle((int)(enemy.x * scale), (int)(enemy.y * scale), 30 * scale);
 
 			if (col != null)
 			{
