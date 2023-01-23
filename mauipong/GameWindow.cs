@@ -90,6 +90,9 @@ namespace mauipong
 		r2vect ball = new(640, 360);
 		r2vect ballv = new(0, 0);
 
+		int playerscore = 0;
+		int enemyscore = 0;
+
 		bool wpress = false;
 		bool apress = false;
 		bool spress = false;
@@ -143,12 +146,14 @@ namespace mauipong
 			int nbally = (int)(ball.y + ballv.y);
 			if (nballx < 0 && (nbally > 240 && nbally < 480))
 			{
+				playerscore++;
 				ballshoot();
 				skglControl1.Invalidate();
 				return;
 			}
 			if (nballx > 1280 && (nbally > 240 && nbally < 480))
 			{
+				enemyscore++;
 				ballshoot();
 				skglControl1.Invalidate();
 				return;
@@ -211,7 +216,7 @@ namespace mauipong
 			//draw field
 			canvas.StrokeColor = Colors.White;
 			canvas.StrokeSize = 30;
-			canvas.DrawRectangle(0, 0, 1280*scale, 720*scale);
+			canvas.DrawRectangle(0, 0, 1280 * scale, 720 * scale);
 			canvas.StrokeColor = Colors.Black;
 			canvas.StrokeSize = 15;
 			canvas.DrawLine((0 + 7) * scale, 240 * scale, (0 + 7) * scale, 480 * scale);
@@ -221,6 +226,14 @@ namespace mauipong
 			canvas.DrawLine(640 * scale, 0 * scale, 640 * scale, 720 * scale);
 			canvas.StrokeDashPattern = null;
 
+			canvas.Font = Microsoft.Maui.Graphics.Font.Default;
+			canvas.FontColor = Colors.White;
+			canvas.FontSize = 50 * scale;
+			canvas.DrawString(playerscore.ToString(), (640 + 50) * scale, 0 * scale, 100, 100,
+				Microsoft.Maui.Graphics.HorizontalAlignment.Center, Microsoft.Maui.Graphics.VerticalAlignment.Center);
+			canvas.DrawString(enemyscore.ToString(), (640 - 150) * scale, 0 * scale, 100, 100,
+				Microsoft.Maui.Graphics.HorizontalAlignment.Center, Microsoft.Maui.Graphics.VerticalAlignment.Center);
+
 
 			canvas.FillColor = Colors.White;
 			canvas.FillCircle((int)(ball.x * scale), (int)(ball.y * scale), 15 * scale);
@@ -228,10 +241,6 @@ namespace mauipong
 			canvas.FillCircle((int)(player.x * scale), (int)(player.y * scale), 30 * scale);
 			canvas.FillColor = Colors.Blue;
 			canvas.FillCircle((int)(enemy.x * scale), (int)(enemy.y * scale), 30 * scale);
-		}
-
-		private void GameWindow_MouseDown(object sender, MouseEventArgs e)
-		{
 		}
 
 		private void GameWindow_KeyDown(object sender, KeyEventArgs e)
@@ -256,6 +265,8 @@ namespace mauipong
 			}
 			if (e.KeyCode == Keys.G)
 			{
+				playerscore = 0;
+				enemyscore = 0;
 				ball = new(640, 360);
 				ballv = new(0, 0);
 			}
