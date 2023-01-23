@@ -52,12 +52,17 @@ namespace mauipong
 			return Math.Abs((linegrad.y * point.x - linegrad.x * point.y + linegrad.x * lineorg.y - linegrad.y * lineorg.x)) / linegrad.l2norm();
 		}
 
+		private double pointdistsigned(r2vect point, r2vect linegrad, r2vect lineorg)
+		{
+			return (linegrad.y * point.x - linegrad.x * point.y + linegrad.x * lineorg.y - linegrad.y * lineorg.x) / linegrad.l2norm();
+		}
+
 		private r2vect checkcolision(r2vect ball, r2vect ballv, r2vect player, r2vect playerv, int rsum)
 		{
-			double d = pointdist(player, ballv, ball);
-			if (d < 45)
+			double d = pointdistsigned(player, ballv, ball);
+			if (Math.Abs(d) < 45)
 			{
-				r2vect foot = -d * (ballv.orthocomp().normalise()) + player;
+				r2vect foot = d * (ballv.orthocomp().normalise()) + player;
 				r2vect travel = ball - foot;
 				if ((travel.l2norm() - (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2)))) > ballv.l2norm()) return null;
 				if ((travel.l2norm() - (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2)))) < ballv.l2norm() &&
