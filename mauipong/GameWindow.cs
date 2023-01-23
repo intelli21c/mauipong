@@ -54,25 +54,36 @@ namespace mauipong
 
 		private r2vect checkcolision(r2vect ball, r2vect ballv, r2vect player, r2vect playerv, int rsum)
 		{
-			if (pointdist(player, ballv, ball) < rsum)
+			double d = pointdist(player, ballv, ball);
+			if (d < 45)
 			{
-				double d = pointdist(player, ballv, ball);
 				r2vect foot = -d * (ballv.orthocomp().normalise()) + player;
 				r2vect travel = ball - foot;
-				if (travel.l2norm() > ballv.l2norm()) return null;
-				return (Math.Sqrt(Math.Pow(rsum, 2) + Math.Pow(d, 2))) * (-1 * ballv.normalise()) + foot;
+				if ((travel.l2norm() - (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2)))) > ballv.l2norm()) return null;
+				if ((travel.l2norm() - (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2)))) < ballv.l2norm() &&
+					(travel.l2norm() + (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2)))) > ballv.l2norm())
+				{
+					this.ball = (Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2))) * (-1 * ballv.normalise()) + foot;
+				}
+				return 30 * (((Math.Sqrt(Math.Pow(rsum, 2) - Math.Pow(d, 2))) * (-1 * ballv.normalise()) + foot) - player).normalise() + player;
 			}
 			return null;
 		}
-		private void bounce(r2vect player, r2vect colpoint, r2vect ballv)
+
+		r2vect vbef;
+		r2vect vaft;
+		private void bounce(r2vect player, r2vect colpoint) //r2vect ballv)
 		{
+			vbef = new(ballv.x, ballv.y);
 			r2vect normal = (colpoint - player).normalise();
-			this.ballv = (ballv - 2 * ballv.innerprod(normal) * normal);
+			ballv = (ballv - 2 * ballv.innerprod(normal) * normal);
+			vaft = new(ballv.x, ballv.y);
 		}
 
 		r2vect player = new(1000, 360);
-		int playerv = 15;
+		r2vect playerv = new(0, 0);
 		r2vect enemy = new(280, 360);
+		r2vect enemyv = new(0, 0);
 
 		r2vect ball = new(640, 360);
 		r2vect ballv = new(0, 0);
@@ -98,6 +109,7 @@ namespace mauipong
 			ballv = 15 * ballv;
 		}
 
+		r2vect col;
 		private void mainupdate(object? sender, EventArgs e)
 		{
 			double compvel = 0;
@@ -140,10 +152,11 @@ namespace mauipong
 				skglControl1.Invalidate();
 				return;
 			}
-			r2vect col = checkcolision(ball, ballv, player, null, 45);
+			col = checkcolision(ball, ballv, player, null, 45);
 			if (col != null)
 			{
-				bounce(player, col, ballv);
+				bounce(player, col);//, ballv);
+				ball = ball + 2 * ballv; //not really...
 				skglControl1.Invalidate();
 				return;
 			}
@@ -180,6 +193,11 @@ namespace mauipong
 			maintimer.Enabled = true;
 		}
 
+		r2vect coll = new(0, 0);
+		r2vect playl = new(0, 0);
+		r2vect balll = new(0, 0);
+		r2vect bvp = new(0, 0);
+		r2vect bva = new(0, 0);
 		private void skglControl1_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs e)
 		{
 			float scale = skglControl1.Height / 720f;
@@ -196,6 +214,27 @@ namespace mauipong
 			canvas.FillCircle((int)(player.x * scale), (int)(player.y * scale), 30 * scale);
 			canvas.FillColor = Colors.Blue;
 			canvas.FillCircle((int)(enemy.x * scale), (int)(enemy.y * scale), 30 * scale);
+
+			if (col != null)
+			{
+				coll = new(col.x, col.y);
+				playl = new(player.x, player.y);
+				balll = new(ball.x, ball.y);
+				bvp = col - vbef;
+				bva = col + vaft;
+			}
+
+			canvas.FillColor = Colors.Orange;
+			canvas.FillCircle((int)(playl.x * scale), (int)(playl.y * scale), 3 * scale);
+			canvas.FillColor = Colors.OrangeRed;
+			canvas.FillCircle((int)(balll.x * scale), (int)(balll.y * scale), 3 * scale);
+			canvas.StrokeColor = Colors.Blue;
+			canvas.StrokeSize = 3;
+			canvas.DrawLine((float)bvp.x * scale, (float)bvp.y * scale, (float)coll.x * scale, (float)coll.y * scale);
+			canvas.StrokeColor = Colors.Cyan;
+			canvas.DrawLine((float)coll.x * scale, (float)coll.y * scale, (float)bva.x * scale, (float)bva.y * scale);
+			canvas.FillColor = Colors.Yellow;
+			canvas.FillCircle((int)(coll.x * scale), (int)(coll.y * scale), 3 * scale);
 		}
 
 		private void GameWindow_MouseDown(object sender, MouseEventArgs e)
